@@ -1,0 +1,243 @@
+package mineswepper;
+
+import java.util.Scanner;
+public class Main {
+	public static final String flag="P";
+	public static int width=0;
+	public static int mineNumber;
+	public static int flagNumber;
+	public static int state=0;
+	public static boolean gameEnd=false;
+	public static void main(String[]args) {
+		String realMap[][];
+		Scanner sc=new Scanner(System.in);
+		System.out.println("Welcome to Minesweeper Created by Dr_EdwardPCB");
+		System.out.println("Please type in the width of the map you want to play to start the game e.g.10");
+		width=sc.nextInt();
+		realMap=generateMinesweeper(width);
+		String playerMap[][]=new String[width][width];
+		for(int i=0;i<width;i++) {
+			for(int j=0;j<width;j++){
+				playerMap[i][j]="#";
+			}
+		}
+		//printMap(realMap,width);
+		printMap(playerMap,width);
+		while(!gameEnd) {
+			int x=0;
+			int y=0;
+			String state="N";
+			String mode="E";
+			while((state.equals("N"))||(!(mode.equals("S")||mode.equals("F")))) {
+				System.out.println("Please Enter a mode F=flag,S=search");
+				mode=sc.next();
+				System.out.println("Please Enter a coordinate[#X],[#Y]");
+				x=sc.nextInt();
+				y=sc.nextInt();
+				System.out.println("You have entered x="+x+" y="+y+" are you sure(Y/N)?");
+				state=sc.next();
+			}
+			if(mode.equals("F")) {
+				playerMap[x][y]=flag;
+			}else {
+				reviewMap(x,y,realMap,playerMap);	
+			} 
+			if(!gameEnd) {
+			//printMap(realMap,width);
+			printMap(playerMap,width);
+			checkWin(playerMap,realMap);
+			}
+		}
+		sc.close();
+	}
+	public static String[][] generateMinesweeper(int width) {
+		String map[][]=new String[width][width];
+		mineNumber=width*width/10;
+		int mineCor[]=new int[mineNumber];
+		//initialize all array
+		for(int i=0;i<mineCor.length;i++) {
+			mineCor[i]=width*width+1;
+		}
+		for(int i=0;i<map.length;i++) {
+			for(int j=0;j<map[i].length;j++) {
+				map[i][j]=".";
+				
+			}
+		}
+		//generate random coordinate that have mine but not coincident
+		for(int i=0;i<mineCor.length;i++) {
+			int x= (int) Math.floor(Math.random()*((width*width)-1));
+			boolean hasNumber=false;
+			for(int j=0;j<mineCor.length;j++) {
+				if(mineCor[j]==x) {
+					hasNumber=true;
+					break;
+				}
+			if(hasNumber) {
+				hasNumber=false;
+				i--;
+			}else {
+				mineCor[i]=x;
+				}
+			}
+		}
+		//put mine in the map
+		for(int i=0;i<mineCor.length;i++) {
+			//System.out.print(mineCor[i]+" ");
+			map[mineCor[i]%width][mineCor[i]/width]="@";
+		}
+		System.out.println();
+		//put number in the map
+		
+		for(int j=0;j<map.length;j++) {
+			for(int i=0;i<map[j].length;i++) {
+				
+				
+				if(!map[i][j].equals("@")) {	//topleft
+					int count=0;
+							if(((i-1>=0)&&(j-1>=0))) {
+								if(map[i-1][j-1].equals("@")) {
+									count++;
+								}
+							}//top
+							if(((j-1>=0))) {
+								if(map[i][j-1].equals("@")) {
+									count++;
+								}
+							}//topright
+							if(((i+1<width)&&(j-1>=0))) {
+								if(map[i+1][j-1].equals("@")) {
+									count++;
+								}
+							}//right
+							if(((i+1<width))) {
+								if(map[i+1][j].equals("@")) {
+									count++;
+								}
+							}//bottom right
+							if(((i+1<width)&&(j+1<width))) {
+								if(map[i+1][j+1].equals("@")) {
+									count++;
+								}
+							}//bottom
+							if(((j+1<width))) {
+								if(map[i][j+1].equals("@")) {
+									count++;
+								}
+							}//bottomleft
+							if(((i-1>=0)&&(j+1<width))) {
+								if(map[i-1][j+1].equals("@")) {
+									count++;
+								}
+							}//left
+							if(((i-1>=0))) {
+								if(map[i-1][j].equals("@")) {
+									count++;
+								}
+							}
+							if(count!=0) {
+								map[i][j]=Integer.toString(count);
+							}
+						}
+				
+			}
+		}
+		return map;
+	}
+	public static void printMap(String[][] map,int width) {
+		for(int i=0;i<width+1;i++) {
+			if(i==0) {
+				System.out.print("  ");
+			}else {
+				System.out.print(i-1+" ");
+			}
+		}
+		System.out.println();
+		for(int i=0;i<width+2;i++) {
+			System.out.print("--");
+		}
+		System.out.println();
+		for(int y=0;y<width;y++) {
+			for(int x=0;x<width+1;x++) {
+				if(x==0) {
+					System.out.print(y+"|");
+				}else {
+					System.out.print(map[x-1][y]+" ");
+				}
+			}
+			System.out.println();
+		}
+		System.out.println();
+	}
+	public static void gameGo(String word) {
+	 if (word=="Y") {
+		 state=0;
+	 }else {
+		 state=-1;
+	 }
+	}
+	public static void reviewMap(int x ,int y,String[][] realMap,String[][] playerMap) {
+		if(realMap[x][y]=="@") {
+			gameEndHelper(playerMap,realMap,false);
+		}else if(realMap[x][y].equals(".")&&playerMap[x][y].equals("#")) {
+			playerMap[x][y]=".";
+			if(((x-1>=0)&&(y-1>=0))) {
+				reviewMap(x-1,y-1,realMap,playerMap);
+			}//top
+			if(((y-1>=0))) {
+				reviewMap(x,y-1,realMap,playerMap);
+				
+			}//topright
+			if(((x+1<width)&&(y-1>=0))) {
+				reviewMap(x+1,y-1,realMap,playerMap);
+				
+			}//right
+			if(((x+1<width))) {
+				reviewMap(x+1,y,realMap,playerMap);
+				
+			}//bottom right
+			if(((x+1<width)&&(y+1<width))) {
+				reviewMap(x+1,y+1,realMap,playerMap);
+				
+			}//bottom
+			if(((y+1<width))) {
+				reviewMap(x,y+1,realMap,playerMap);
+				
+			}//bottomleft
+			if(((x-1>=0)&&(y+1<width))) {
+				reviewMap(x-1,y+1,realMap,playerMap);
+
+			}//left
+			if(((x-1>=0))) {
+				reviewMap(x-1,y,realMap,playerMap);
+
+			}
+			
+		}else {
+			playerMap[x][y]=realMap[x][y];
+		}
+	}
+	public static void gameEndHelper(String[][] playerMap, String[][] realMap,boolean win) {
+		gameEnd=true;
+		printMap(playerMap,width);
+		printMap(realMap,width);
+		if(win) {
+			System.out.println("YOU WIN!");
+		}else {
+		System.out.println("YOU LOSE!");
+		}
+	}
+	public static void checkWin(String[][] playerMap, String[][] realMap) {
+		System.out.println("checking win or not");
+		boolean matchFlag=true;
+		for(int i=0;i<width;i++) {
+			for(int j=0;j<width;j++) {
+				if(realMap[i][j].equals("@")&&!playerMap[i][j].equals(flag)) {
+					matchFlag=false;
+				}
+			}
+		}
+		if(matchFlag) {
+		gameEndHelper(playerMap,realMap,true);
+	}}
+}
