@@ -1,5 +1,4 @@
 # JAVA MineSweeper-CL
-===
 This is made open source.
 
 ---
